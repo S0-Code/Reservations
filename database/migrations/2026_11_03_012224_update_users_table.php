@@ -15,12 +15,15 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
+            //$table->string('name', 60)->change();	//Ne fonctionne pas avec ENUM
             $table->renameColumn('name', 'firstname');
+
             $table->string('lastname', 60)->after('firstname');
             $table->string('login', 30)->after('id');
             $table->string('langue', 2);
-            $table->enum('role', ['admin','member','affiliate','press'])
+            $table->enum('role', ['admin','member','affiliate','press',])
                 ->default('member');
+
             $table->unique('login', 'users_login_unique');
         });
 
@@ -36,6 +39,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropUnique('users_login_unique');
+
             $table->dropColumn(['role', 'langue', 'login', 'lastname']);
             $table->string('firstname', 255)->change();
             $table->renameColumn('firstname', 'name');
