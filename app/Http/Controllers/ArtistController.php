@@ -4,83 +4,64 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Artist;
+use Illuminate\Support\Facades\Gate;
 
 class ArtistController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $artists = Artist::all();
 
-                return view('artist.index',[
-                    'artists' => $artists,
-                    'resource' => 'artistes',
-                ]);
-
+        return view('artist.index',[
+            'artists' => $artists,
+            'resource' => 'artistes',
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
-        {
-            if(\Illuminate\Support\Facades\Auth::user()==null) {
-                return redirect()->route('login');
-            }
-
-            if(\Illuminate\Support\Facades\Auth::user()->role!='admin') {
-                return abort(403);
-            }
-
-            //Traitement
-
-            return view('artist.create');
+    {
+        if (!Gate::allows('create-artist')) {
+            abort(403);
         }
 
-        public function store(Request $request)
-        {
-            //Validation des données du formulaire
-            $validated = $request->validate([
-                'firstname' => 'required|max:60',
-                'lastname' => 'required|max:60',
-            ]);
+        return view('artist.create');
+    }
 
-            //Le formulaire a été validé, nous créons un nouvel artiste à insérer
-            $artist = new Artist();
-
-            //Assignation des données et sauvegarde dans la base de données
-            $artist->firstname = $validated['firstname'];
-            $artist->lastname = $validated['lastname'];
-            $artist->save();
-
-            return redirect()->route('artist.index');
+    public function store(Request $request)
+    {
+        if (!Gate::allows('update-artist')) {
+            abort(403);
         }
 
+        $validated = $request->validate([
+            'firstname' => 'required|max:60',
+            'lastname' => 'required|max:60',
+        ]);
 
+        $artist = new Artist();
 
-    /**
-     * Display the specified resource.
-     */
+        $artist->firstname = $validated['firstname'];
+        $artist->lastname = $validated['lastname'];
+        $artist->save();
+
+        return redirect()->route('artist.index');
+    }
+
     public function show(string $id)
     {
         $artist = Artist::find($id);
 
-                return view('artist.show',[
-                    'artist' => $artist,
-                ]);
-
+        return view('artist.show',[
+            'artist' => $artist,
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id)
     {
+        if (!Gate::allows('update-artist')) {
+            abort(403);
+        }
+
         $artist = Artist::find($id);
 
         return view('artist.edit',[
@@ -88,25 +69,19 @@ class ArtistController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
-	   //Validation des données du formulaire
+        if (!Gate::allows('update-artist')) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'firstname' => 'required|max:60',
             'lastname' => 'required|max:60',
         ]);
 
-	   //Le formulaire a été validé, nous récupérons l’artiste à modifier
         $artist = Artist::find($id);
 
-	   //Mise à jour des données modifiées et sauvegarde dans la base de données
         $artist->update($validated);
 
         return view('artist.show',[
@@ -114,12 +89,12 @@ class ArtistController extends Controller
         ]);
     }
 
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
+        if (!Gate::allows('delete-artist')) {
+            abort(403);
+        }
+
         $artist = Artist::find($id);
         if($artist) {
             $artist->delete();
