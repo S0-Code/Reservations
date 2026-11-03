@@ -26,6 +26,16 @@ class ArtistController extends Controller
      */
     public function create()
         {
+            if(\Illuminate\Support\Facades\Auth::user()==null) {
+                return redirect()->route('login');
+            }
+
+            if(\Illuminate\Support\Facades\Auth::user()->role!='admin') {
+                return abort(403);
+            }
+
+            //Traitement
+
             return view('artist.create');
         }
 
